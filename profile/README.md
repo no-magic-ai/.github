@@ -21,7 +21,7 @@ One constraint per repo. No bleed. Repos do not share build systems, do not impo
 | [**no-magic**](https://github.com/no-magic-ai/no-magic) | One algorithm per file. Stdlib only. CPU only. Runs in under 10 minutes. | live |
 | [**no-magic-viz**](https://github.com/no-magic-ai/no-magic-viz) | One Manim scene per algorithm. Renders to MP4 and GIF. | live |
 | [**no-magic-ai.github.io**](https://github.com/no-magic-ai/no-magic-ai.github.io) | Static HTML portal. No JS framework. Federates the ecosystem. | live |
-| [**no-magic-papers**](https://github.com/no-magic-ai/no-magic-papers) | One markdown per paper, plus companion lessons. Summary, contribution, status, link to implementation. | next |
+| [**no-magic-papers**](https://github.com/no-magic-ai/no-magic-papers) | One markdown per paper, plus companion lessons. Summary, contribution, status, link to implementation. | live |
 | [**no-magic-paths**](https://github.com/no-magic-ai/no-magic-paths) | Curated reading orders with prerequisites across algorithms and lessons. | planned |
 | [**no-magic-labs**](https://github.com/no-magic-ai/no-magic-labs) | Exercises and applied projects that exceed one-file scope. | later |
 | [**apprentice**](https://github.com/no-magic-ai/apprentice) | Agent pipeline that drafts algorithm entries from papers for human review. | design |

@@ -318,9 +318,15 @@ Implementation is not done until the cross-repo state is consistent. This stage 
     - repo: no-magic
       path: 02-alignment/microrome.py
       script_slug: microrome
-      commit: <sha>
+      commit: null
       release: v2.1.0
+      media_repo: no-magic-viz
+      media_status: linked
+      scene_path: scenes/scene_microrome.py
+      preview_path: previews/microrome.gif
+      media_note: null
   ```
+  Each entry has exactly these ten keys in this order; `no-magic-papers/SCHEMA.md` is the authority. `commit` is the 40-hex implementation commit or `null`, and `release` is `vMAJOR.MINOR.PATCH` or `null`. `media_status: linked` requires `scenes/scene_{script_slug}.py` and `previews/{script_slug}.gif` to be committed in `no-magic-viz`. A script without that scene and preview must instead declare `media_status: omitted`, with `media_repo`, `scene_path` and `preview_path` set to `null` and a non-empty `media_note` explaining the omission. Omission is accepted only when the script's catalog `teaching_kind` is `comparison`; any other script needs its committed scene and preview before its card can list it.
 - [ ] **`no-magic-papers/INDEX.md`** — regenerate via `scripts/generate_index.py`. Do not hand-edit.
 - [ ] **`no-magic/README.md`** — if the script introduces a new tier category, update the top-level catalog section.
 - [ ] **`no-magic-viz`** — if a visualization is planned, open a `viz` issue tagged with the same slug.
@@ -443,14 +449,9 @@ routing:
   target_tier: null
   batch_label: null
   review_date: null
-implementations:                   # list — set at Stage 5; one entry per script
-  - repo: null                     # e.g. no-magic
-    path: null                     # e.g. 02-alignment/microrome.py
-    script_slug: null              # e.g. microrome (basename minus .py)
-    commit: null
-    release: null
-  # Add additional entries when one paper introduces multiple distinct algorithms.
-  # Common case is a list of length 1.
+implementations: []                # stays [] until Stage 5, then one ten-key entry per script
+                                   # (linked or omitted media) exactly as in §7.1 and no-magic-papers/SCHEMA.md
+  # A paper that introduces multiple distinct algorithms lists one entry per script.
 lesson:
   path: null                       # no-magic-papers/lessons/{paper-slug}.md if authored
   status: null                     # none | planned | drafted | published
@@ -625,7 +626,7 @@ no-magic-papers/
 │   └── ...
 ├── scripts/
 │   ├── validate_invariants.py    # CI enforcement of §7.3
-│   └── generate_index.py          # optional INDEX.md generator
+│   └── generate_index.py          # shared card/lesson parser and validator; INDEX.md generator
 └── .github/
     ├── ISSUE_TEMPLATE/
     │   ├── triage.yml             # §2.2

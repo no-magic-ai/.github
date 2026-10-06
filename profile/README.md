@@ -18,7 +18,7 @@ One constraint per repo. No bleed. Repos do not share build systems and do not i
 
 | Repo | Single-sentence constraint | Status |
 |------|---------------------------|--------|
-| [**no-magic**](https://github.com/no-magic-ai/no-magic) | One algorithm per file. Stdlib only. CPU only. Runs in under 10 minutes. | live |
+| [**no-magic**](https://github.com/no-magic-ai/no-magic) | One algorithm per file. Stdlib only. CPU only. Designed to run in under 10 minutes; recorded timings are historical, not a current measurement of every script. | live |
 | [**no-magic-viz**](https://github.com/no-magic-ai/no-magic-viz) | One Manim scene per algorithm. Renders to MP4 and GIF. | live |
 | [**no-magic-ai.github.io**](https://github.com/no-magic-ai/no-magic-ai.github.io) | Static HTML portal. No JS framework. Federates the ecosystem. | live |
 | [**no-magic-papers**](https://github.com/no-magic-ai/no-magic-papers) | One markdown per paper, plus companion lessons. Summary, contribution, status, link to implementation. | live |

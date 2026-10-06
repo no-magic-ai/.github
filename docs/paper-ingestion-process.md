@@ -318,9 +318,15 @@ Implementation is not done until the cross-repo state is consistent. This stage 
     - repo: no-magic
       path: 02-alignment/microrome.py
       script_slug: microrome
-      commit: <sha>
+      commit: null
       release: v2.1.0
+      media_repo: no-magic-viz
+      media_status: linked
+      scene_path: scenes/scene_microrome.py
+      preview_path: previews/microrome.gif
+      media_note: null
   ```
+  Each entry has exactly these ten keys in this order; `no-magic-papers/SCHEMA.md` is the authority. `commit` is the 40-hex implementation commit or `null`, and `release` is `vMAJOR.MINOR.PATCH` or `null`. `media_status: linked` requires `scenes/scene_{script_slug}.py` and `previews/{script_slug}.gif` to be committed in `no-magic-viz`. A script without that scene and preview must instead declare `media_status: omitted`, with `media_repo`, `scene_path` and `preview_path` set to `null` and a non-empty `media_note` explaining the omission. Omission is accepted only when the script's catalog `teaching_kind` is `comparison`; any other script needs its committed scene and preview before its card can list it.
 - [ ] **`no-magic-papers/INDEX.md`** — regenerate via `scripts/generate_index.py`. Do not hand-edit.
 - [ ] **`no-magic/README.md`** — if the script introduces a new tier category, update the top-level catalog section.
 - [ ] **`no-magic-viz`** — if a visualization is planned, open a `viz` issue tagged with the same slug.
@@ -337,15 +343,15 @@ Implementation is not done until the cross-repo state is consistent. This stage 
 
 ### 7.3 Atomic integrity invariants
 
-At any point in time, the following must hold:
+Every qualified cohort — the exact `no-magic`, `no-magic-papers` and `no-magic-viz` commits that CI validates together (see below) — must satisfy the following. Independently moving public `main` branches are consistent only when a cohort over those commits has been validated.
 
 1. If `catalog.json` has an entry for a script `S`, exactly one paper card in `no-magic-papers/papers/` has an `implementations[]` entry whose `path` points to `S`, and the card's `status` is `implemented`.
-2. If a paper card has `status: implemented`, every entry in its `implementations[]` list resolves to a file that exists on `main` in the named `repo`.
-3. From `no-magic` v3.0 onward: no script exists in `no-magic` without a paper card whose `implementations[]` references it. (Pre-v3.0: this invariant is advisory; v0.1–v2.x scripts may temporarily lack paper cards during the backfill window.)
+2. Every entry in any paper card's `implementations[]` list, whatever the card's `status`, names a script in the selected `catalog.json`, uses that entry's `{tier}/{script_slug}.py` path and resolves to a committed regular file at that path in the selected `no-magic` commit. In a candidate cohort the selected commits are the exact candidate heads and no publication is claimed; in a published cohort each selected commit must also be an ancestor of its public `main`.
+3. No script exists in `no-magic` without a paper card whose `implementations[]` references it. The current cohort validator enforces this for every entry in the selected `catalog.json` on every run: each entry's `paper_slug` must name a card that references the script back. It does not compare tier `.py` files against the catalog; that coverage comes from `no-magic/scripts/generate_catalog.py`, which fails on a tier script without registry entries, runs `--check` only as a local command and is rerun by the post-merge Update Catalog workflow to regenerate `main` (there is no pull-request catalog freshness check). `no-magic` `VERSION` must be a valid `MAJOR.MINOR.PATCH`, a missing or malformed `VERSION` fails, and no version relaxes the rule. (Historical rollout: before `no-magic` v3.0 this invariant was advisory, and v0.1–v2.x scripts could temporarily lack paper cards during the backfill window; see §14 decision 14.)
 4. Paper slugs and script slugs are disjoint namespaces — a paper slug never appears as a script filename, and vice versa. The `micro*` prefix is reserved for script slugs; paper slugs never carry it. (Lint rule: reject paper cards whose filename starts with `micro` — enforced by `no-magic-papers/scripts/generate_index.py`; reject new scripts whose filename does not start with `micro` — reviewed manually. The three existing scripts without the prefix, `attention_vs_none`, `rnn_vs_gru_vs_lstm` and `adam_vs_sgd`, predate this rule; the prefix says nothing about a script's teaching kind.)
-5. `INDEX.md` matches the output of `scripts/generate_index.py` against the current frontmatter. CI fails when it differs; it does not revert hand edits. `generate_index.py --check` compares decoded text, so line-ending-only differences are not detected.
+5. `INDEX.md` matches the output of `scripts/generate_index.py` against the current frontmatter. CI fails when it differs; it does not revert hand edits. `generate_index.py --check` compares the rendered UTF-8 bytes, so line-ending differences also fail.
 
-`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` against `no-magic/docs/catalog.json` and `papers/*.md`, and invariant 5 with `scripts/generate_index.py --check`. The validator matches cards to catalog entries only by `implementations[].script_slug` and the catalog's `paper_slug`; it never reads `implementations[].path` or resolves any file on `main`, so invariants 1 and 2 are name-checked, not path-checked. Path resolution, status consistency and byte-level index freshness are not yet checked by CI. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
+`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` over one explicit cohort of `no-magic`, `no-magic-papers` and `no-magic-viz` commits, and invariant 5 with `scripts/generate_index.py --check`. The validator reads cards through the single frontmatter parser in `generate_index.py`. Each `implementations[]` entry's `path` must be `{tier}/{script_slug}.py`, match the catalog entry and resolve to a committed regular file in `no-magic`; unsafe or wrong-repo paths, duplicate ownership, lesson status/path/file mismatches and orphan lessons fail. Each entry also declares its media: a linked scene and GIF preview that must be committed in `no-magic-viz` as valid Python and a GIF with nonzero dimensions, or an explicit omission allowed only for catalog `comparison` scripts. These media checks confirm presence and format, not rendering. Every input must equal the committed blob at the selected commit, and a passing run records those digests in a receipt. PRs and non-`main` pushes validate the exact head as a candidate cohort, which makes no publication claim; pushes to `main` validate the published cohort, whose commits must be ancestors of each public `main`, so publication ancestry is checked only in published runs. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
 
 ---
 
@@ -357,9 +363,9 @@ Papers and their implementations are not static.
 
 ```
   triaged ──► summarized ──► backlog-implement ──► implemented
-                  │                  │                   │
-                  ▼                  ▼                   ▼
-            reference-only      deferred            deprecated
+                  │                                      │
+                  ▼                                      ▼
+            reference-only                          deprecated
                                                         │
                                                         ▼
                                                      replaced
@@ -369,8 +375,12 @@ Papers and their implementations are not static.
 ```
 
 - **deprecated:** the paper is still accurate but the implementation no longer reflects best practice or has been superseded. The script gets a `DEPRECATED.md` banner; paper card is updated.
-- **replaced:** a newer paper supersedes this one. The card links forward to the replacement card; the implementation may be retired or kept as a historical reference.
-- **archived:** content moved out of the active catalog but preserved in git history and paper card (`status: archived` with rationale).
+- **replaced:** a newer paper supersedes this one. The card links forward to the replacement card; the implementation may be retired or kept as a historical reference in the card narrative and Git history (see below).
+- **archived:** content moved out of the active catalog but preserved in git history and paper card (`status: archived` with rationale in the card narrative, not in `implementations[]`).
+
+Deferral is not a card status: it is the routing decision `routing.decision: deferred` with a `routing.review_date` (§5), and the maintainer keeps whichever card `status` currently fits. A routing choice does not set the status.
+
+`implementations[]` lists only artifacts that exist in the selected cohort; its `commit` and `release` labels annotate those current files and are not a lookup into history. Because §7.3 invariant 2 requires every listed entry to resolve to the selected catalog and a committed `no-magic` file whatever the card's `status`, and invariant 1 requires a script still in the catalog to have exactly one owning card with `status: implemented`, retiring a script or moving a card away from `implemented` is a coordinated, human-reviewed lifecycle operation across two repositories, not one atomic commit. It proceeds in owning-repository order. First the reviewed `no-magic` change that removes the script from the catalog, or moves its ownership, is merged. Then the `no-magic-papers` change that removes the entry from `implementations[]` and updates the card's `status` and metadata is reviewed and checked as a candidate cohort against that merged public `no-magic` `main` (the core revision `no-magic-papers` CI checks candidates against), and merged. Finally the published cohort over both public `main` branches is validated again. Between the two merges the public repositories are out of sync: that intermediate public cohort is not qualified, its checks are not passing, and no branch label or offline fixture stands in for actual published state. The paper, the rationale and any genuine historical reference stay in the card narrative and in Git history rather than as live metadata. There is no archival exemption, and these checks neither decide nor authorize any retirement; lifecycle and content decisions remain the maintainer's human approvals.
 
 ### 8.2 Lifecycle review cadence
 
@@ -443,14 +453,9 @@ routing:
   target_tier: null
   batch_label: null
   review_date: null
-implementations:                   # list — set at Stage 5; one entry per script
-  - repo: null                     # e.g. no-magic
-    path: null                     # e.g. 02-alignment/microrome.py
-    script_slug: null              # e.g. microrome (basename minus .py)
-    commit: null
-    release: null
-  # Add additional entries when one paper introduces multiple distinct algorithms.
-  # Common case is a list of length 1.
+implementations: []                # stays [] until Stage 5, then one ten-key entry per script
+                                   # (linked or omitted media) exactly as in §7.1 and no-magic-papers/SCHEMA.md
+  # A paper that introduces multiple distinct algorithms lists one entry per script.
 lesson:
   path: null                       # no-magic-papers/lessons/{paper-slug}.md if authored
   status: null                     # none | planned | drafted | published
@@ -581,7 +586,7 @@ Fully autonomous paper-to-implementation is off-charter. The maintainer review g
 10. All contributions to paper cards, lessons, and implementations are manually reviewed by the maintainer before merge.
 11. **Slug convention (Option C).** Paper cards and lessons use paper-canonical slugs without a `micro*` prefix (e.g. `rome`, `turboquant`, `deepseek-r1`). `no-magic` scripts keep the `micro*` prefix as a pedagogical-miniature claim. Cross-repo linkage is explicit via `implementations[]` (`path`, `script_slug`) in the paper card and a back-reference in `SCRIPT_TO_PAPER` in `no-magic/scripts/generate_catalog.py`, published as the catalog's `paper_slug`. CI enforces the paper-side half of the disjoint-namespace invariant (§7.3); the script-side prefix rule is reviewed manually.
 12. **One paper card per paper, list-valued `implementations:`.** When a paper introduces multiple distinct algorithms, the card declares multiple entries in `implementations[]`. Bibliographic metadata is the unit of citation; algorithms are the units of implementation.
-13. **`INDEX.md` is generated.** Built by `scripts/generate_index.py` from card frontmatter, grouped by primary theme. Regenerate it with that script; CI runs `generate_index.py --check` and fails on drift (§7.3 invariant 5). The check compares decoded text, so line-ending-only differences are not detected, and CI does not revert hand edits.
+13. **`INDEX.md` is generated.** Built by `scripts/generate_index.py` from card frontmatter, grouped by primary theme. Regenerate it with that script; CI runs `generate_index.py --check` and fails on drift (§7.3 invariant 5). The check compares the rendered UTF-8 bytes, so line-ending differences also fail, and CI does not revert hand edits.
 14. **Release sequence:** `no-magic` v2.1 (gap-fill batch, additive) → `no-magic-papers` v0.1 (5 seed cards + 2 lessons) → `no-magic` v3.0 (mandatory `paper_slug` in `catalog.json`, full backfill, §7.3 invariant 3 becomes enforced).
 
 ---
@@ -625,7 +630,7 @@ no-magic-papers/
 │   └── ...
 ├── scripts/
 │   ├── validate_invariants.py    # CI enforcement of §7.3
-│   └── generate_index.py          # optional INDEX.md generator
+│   └── generate_index.py          # shared card/lesson parser and validator; INDEX.md generator
 └── .github/
     ├── ISSUE_TEMPLATE/
     │   ├── triage.yml             # §2.2

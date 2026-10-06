@@ -60,9 +60,9 @@ Binding on every contributor and every agent that operates on these repos.
 
 1. **Paper-first.** Every algorithm implementation cites its sources in a reference comment directly after its thesis docstring and is explicitly mapped to a paper card. Where the cited sources or the implemented method differ from that card, the catalog's adaptation note says so. If no paper exists, the algorithm does not belong in the catalog.
 2. **No tutorial contact.** Do not read other educational repos (fast.ai, Karpathy's nn-zero-to-hero, HuggingFace courses, dive-into-llms) while writing a `no-magic` script. Topic inspiration from their tables of contents is permitted.
-3. **Attribution is a line, not a link.** Cite sources in docstrings with full bibliographic detail.
+3. **Attribution is a line, not a link.** Cite sources in the reference comment directly after the thesis docstring, with full bibliographic detail.
 4. **License vigilance.** Before adopting any external asset, verify and record the license in `ASSETS.md`.
-5. **Contributor pledge.** Every contributor affirms they implemented from papers, not from tutorials. Enforcement is by maintainer review, not by CI.
+5. **Contributor pledge (required policy).** Contributors must affirm that they implemented from papers, not from tutorials. `no-magic-papers/CONTRIBUTING.md` already states a card and lesson pledge; the implementation pledge is not yet written into `no-magic/CONTRIBUTING.md`, and no signed affirmations are collected. Enforcement is by maintainer review, not by CI.
 
 ---
 

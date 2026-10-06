@@ -195,7 +195,7 @@ no-magic-papers/papers/{paper-slug}.md
 - Examples: `rome`, `memit`, `lora`, `dpo`, `grpo`, `turboquant`, `deepseek-r1`, `nsa`.
 - **Collision fallback:** if the canonical name is generic or already taken, append `-{year}` or `-{first-author-lastname}` until unique. Examples: `titans-2501` (generic name), `mamba-gu` (first-author tiebreaker), `moe-switch` vs `moe-aux-free`.
 
-The corresponding implementation, if one is planned, uses a separate `micro*`-prefixed filename in `no-magic` (e.g. paper `rome` → script `microrome.py`). The mapping is recorded explicitly in `implementation.path` in the card frontmatter — never inferred by string manipulation.
+The corresponding implementation, if one is planned, uses a separate `micro*`-prefixed filename in `no-magic` (e.g. paper `rome` → script `microrome.py`). The mapping is recorded explicitly in the card frontmatter's `implementations[]` entries (`path` and `script_slug`) and in `SCRIPT_TO_PAPER` in `no-magic/scripts/generate_catalog.py` — never inferred by string manipulation.
 
 ### 4.2 Paper card template
 
@@ -247,7 +247,7 @@ Once the card lands with `status: summarized`, a routing decision determines whi
 For each paper, the router (human or agent) answers in order:
 
 1. **Is the algorithm within the single-file constraint?** If no: `reference-only`.
-2. **Does the algorithm already exist under another name in `no-magic`?** If yes: `reference-only`; cross-link from the existing script's docstring.
+2. **Does the algorithm already exist under another name in `no-magic`?** If yes: `reference-only`; cross-link from the existing script's reference comment.
 3. **Is there a `no-magic-viz` scene opportunity, independent of a script?** If yes and no script planned: `visualize-only`.
 4. **Is this a candidate for the next implementation batch?** If yes: `backlog-implement` + assign to batch.
 5. Otherwise: `deferred` with a re-review date.
@@ -298,7 +298,7 @@ Only cards with `routing.decision: backlog-implement` reach this stage.
 
 - Constraint check: single file, stdlib only, runs in budget.
 - Correctness check: training loss decreases, inference produces sensible output, seeds deterministic.
-- Provenance check: docstring cites the correct paper; no unattributed fragments.
+- Provenance check: the reference comment after the thesis docstring cites the correct paper; no unattributed fragments.
 - Commenting check: 30–40% density, required comment types present.
 - Paper-card sync: status updates pending (handled in Stage 5).
 
@@ -343,9 +343,9 @@ At any point in time, the following must hold:
 2. If a paper card has `status: implemented`, every entry in its `implementations[]` list resolves to a file that exists on `main` in the named `repo`.
 3. From `no-magic` v3.0 onward: no script exists in `no-magic` without a paper card whose `implementations[]` references it. (Pre-v3.0: this invariant is advisory; v0.1–v2.x scripts may temporarily lack paper cards during the backfill window.)
 4. Paper slugs and script slugs are disjoint namespaces — a paper slug never appears as a script filename, and vice versa. The `micro*` prefix is reserved for script slugs; paper slugs never carry it. (Lint rule: reject paper cards whose filename starts with `micro` — enforced by `no-magic-papers/scripts/generate_index.py`; reject new scripts whose filename does not start with `micro` — reviewed manually. The three existing scripts without the prefix, `attention_vs_none`, `rnn_vs_gru_vs_lstm` and `adam_vs_sgd`, predate this rule; the prefix says nothing about a script's teaching kind.)
-5. `INDEX.md` byte-for-byte matches the output of `scripts/generate_index.py` against the current frontmatter. Hand-edits are reverted by CI.
+5. `INDEX.md` matches the output of `scripts/generate_index.py` against the current frontmatter. CI fails when it differs; it does not revert hand edits. `generate_index.py --check` compares decoded text, so line-ending-only differences are not detected.
 
-`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` against `no-magic/docs/catalog.json` and `papers/*.md` (invariant 2 is checked by `script_slug` presence in the catalog, not by resolving the file on `main`), and invariant 5 with `scripts/generate_index.py --check`. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
+`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` against `no-magic/docs/catalog.json` and `papers/*.md`, and invariant 5 with `scripts/generate_index.py --check`. The validator matches cards to catalog entries only by `implementations[].script_slug` and the catalog's `paper_slug`; it never reads `implementations[].path` or resolves any file on `main`, so invariants 1 and 2 are name-checked, not path-checked. Path resolution, status consistency and byte-level index freshness are not yet checked by CI. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
 
 ---
 
@@ -519,7 +519,7 @@ What the paper leaves unresolved. Optional.
 | Paper card statuses changed by anyone other than the syncer. | Causes drift between card state and implementation state. |
 | Introducing a new tier because a paper doesn't fit the existing four. | Tier structure is org-level taxonomy; change via strategy doc, not in response to one paper. |
 | Applying the `micro*` prefix to a paper slug. | The prefix is a pedagogical-miniature claim. A paper is not a miniature; its slug must be the paper's canonical name (see §4.1 and §7.3 invariant 4). |
-| Inferring a paper slug from a script slug by stripping `micro`, or vice versa. | The mapping is never convention-based. Cross-references are explicit fields in frontmatter or docstrings. |
+| Inferring a paper slug from a script slug by stripping `micro`, or vice versa. | The mapping is never convention-based. Cross-references are explicit: `implementations[]` entries in card frontmatter, and `SCRIPT_TO_PAPER` in `no-magic/scripts/generate_catalog.py`, published as the catalog's `paper_slug`. Scripts carry no docstring back-reference. |
 
 ---
 
@@ -579,7 +579,7 @@ Fully autonomous paper-to-implementation is off-charter. The maintainer review g
 8. Ingestion runs on the maintainer's initiative with no SLA. The only rhythmic obligation is the annual lifecycle sweep (§9.2).
 9. The paper card template in §10 is canonical; fields can be extended, not removed. Every card carries one primary theme from §3.5.
 10. All contributions to paper cards, lessons, and implementations are manually reviewed by the maintainer before merge.
-11. **Slug convention (Option C).** Paper cards and lessons use paper-canonical slugs without a `micro*` prefix (e.g. `rome`, `turboquant`, `deepseek-r1`). `no-magic` scripts keep the `micro*` prefix as a pedagogical-miniature claim. Cross-repo linkage is explicit via `implementations[].path` in the paper card and a back-reference in the script docstring. CI enforces the disjoint-namespace invariant (§7.3).
+11. **Slug convention (Option C).** Paper cards and lessons use paper-canonical slugs without a `micro*` prefix (e.g. `rome`, `turboquant`, `deepseek-r1`). `no-magic` scripts keep the `micro*` prefix as a pedagogical-miniature claim. Cross-repo linkage is explicit via `implementations[]` (`path`, `script_slug`) in the paper card and a back-reference in `SCRIPT_TO_PAPER` in `no-magic/scripts/generate_catalog.py`, published as the catalog's `paper_slug`. CI enforces the paper-side half of the disjoint-namespace invariant (§7.3); the script-side prefix rule is reviewed manually.
 12. **One paper card per paper, list-valued `implementations:`.** When a paper introduces multiple distinct algorithms, the card declares multiple entries in `implementations[]`. Bibliographic metadata is the unit of citation; algorithms are the units of implementation.
 13. **`INDEX.md` is generated.** Built by `scripts/generate_index.py` from card frontmatter, grouped by primary theme. Pre-commit hook regenerates; CI fails on drift (§7.3 invariant 5). Hand-edits are reverted.
 14. **Release sequence:** `no-magic` v2.1 (gap-fill batch, additive) → `no-magic-papers` v0.1 (5 seed cards + 2 lessons) → `no-magic` v3.0 (mandatory `paper_slug` in `catalog.json`, full backfill, §7.3 invariant 3 becomes enforced).

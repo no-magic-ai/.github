@@ -93,7 +93,7 @@ Clean-room reverse engineering (Phoenix BIOS, Compaq's AMI clone) exists to prod
 - **Legal:** No derivative-works exposure. Papers describe techniques; techniques aren't copyrightable.
 - **Pedagogical:** Primary sources beat tutorial summaries. Tutorials add a translation layer that loses precision.
 - **Independent:** No dependency on the maintainer's license posture, future or present.
-- **Attribution:** A single line in each script's docstring — "Implementation from Meng et al., 2022 (arXiv:2202.05262). Curriculum position informed by dive-into-llms ch.3." — attributes fairly without creating legal entanglement.
+- **Attribution:** A single line in each script's reference comment, directly after the thesis docstring — "Implementation from Meng et al., 2022 (arXiv:2202.05262). Curriculum position informed by dive-into-llms ch.3." — attributes fairly without creating legal entanglement.
 
 ### 3.3 Operational rule
 
@@ -236,9 +236,9 @@ Stretch (post-batch):
 
 1. **Paper-first always.** Every `no-magic` script cites the original paper(s) in the reference comment directly after its thesis docstring.
 2. **No tutorial contact.** Do not read `dive-into-llms`, Karpathy's `nn-zero-to-hero`, fast.ai notebooks, or similar resources while writing a `no-magic` script. Topic inspiration from their tables of contents is allowed; prose and code contact is not.
-3. **Attribution block.** Each script's thesis docstring includes: primary paper citation; optional curriculum-inspiration line ("Topic selection informed by dive-into-llms ch.X").
+3. **Attribution block.** Each script's reference comment, directly after the thesis docstring, includes: primary paper citation; optional curriculum-inspiration line ("Topic selection informed by dive-into-llms ch.X").
 4. **License vigilance.** Before adopting any new upstream asset (dataset, image, text), verify the license. Record provenance in `ASSETS.md`.
-5. **Contributor pledge.** Contributors affirm they implemented from papers, not from tutorials. `no-magic-papers` carries a card/lesson pledge; the implementation pledge is not yet in `no-magic/CONTRIBUTING.md` (see §0).
+5. **Contributor pledge (required policy).** Contributors must affirm that they implemented from papers, not from tutorials. `no-magic-papers/CONTRIBUTING.md` already states a card and lesson pledge; the implementation pledge is not yet written into `no-magic/CONTRIBUTING.md` and no signed affirmations are collected (see §0). Enforcement is by maintainer review, not by CI.
 
 ---
 
@@ -301,4 +301,4 @@ None currently open. All previously-listed questions resolved per locked decisio
 - Chapters: 11
 - License: none (default copyright)
 - Maintainer contact: SJTU BCMI lab, Zhang Zhuosheng et al.
-- Citation position in `no-magic`: `FURTHER_READING.md`, topic-inspiration line in relevant script docstrings.
+- Citation position in `no-magic`: `FURTHER_READING.md`, topic-inspiration line in the reference comment of relevant scripts.

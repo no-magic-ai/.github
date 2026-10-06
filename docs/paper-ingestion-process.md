@@ -346,12 +346,12 @@ Implementation is not done until the cross-repo state is consistent. This stage 
 At any point in time, the following must hold:
 
 1. If `catalog.json` has an entry for a script `S`, exactly one paper card in `no-magic-papers/papers/` has an `implementations[]` entry whose `path` points to `S`, and the card's `status` is `implemented`.
-2. If a paper card has `status: implemented`, every entry in its `implementations[]` list resolves to a file that exists on `main` in the named `repo`.
-3. From `no-magic` v3.0 onward: no script exists in `no-magic` without a paper card whose `implementations[]` references it. (Pre-v3.0: this invariant is advisory; v0.1–v2.x scripts may temporarily lack paper cards during the backfill window.)
+2. Every entry in any paper card's `implementations[]` list, whatever the card's `status`, names a script in the selected `catalog.json`, uses that entry's `{tier}/{script_slug}.py` path and resolves to a committed regular file at that path in the selected `no-magic` commit. In a candidate cohort the selected commits are the exact candidate heads and no publication is claimed; in a published cohort each selected commit must also be an ancestor of its public `main`.
+3. No script exists in `no-magic` without a paper card whose `implementations[]` references it: every catalog `paper_slug` names a card that references the script back. The current cohort validator enforces this on every run; `no-magic` `VERSION` must be a valid `MAJOR.MINOR.PATCH`, a missing or malformed `VERSION` fails, and no version relaxes the rule. (Historical rollout: before `no-magic` v3.0 this invariant was advisory, and v0.1–v2.x scripts could temporarily lack paper cards during the backfill window; see §14 decision 14.)
 4. Paper slugs and script slugs are disjoint namespaces — a paper slug never appears as a script filename, and vice versa. The `micro*` prefix is reserved for script slugs; paper slugs never carry it. (Lint rule: reject paper cards whose filename starts with `micro` — enforced by `no-magic-papers/scripts/generate_index.py`; reject new scripts whose filename does not start with `micro` — reviewed manually. The three existing scripts without the prefix, `attention_vs_none`, `rnn_vs_gru_vs_lstm` and `adam_vs_sgd`, predate this rule; the prefix says nothing about a script's teaching kind.)
 5. `INDEX.md` matches the output of `scripts/generate_index.py` against the current frontmatter. CI fails when it differs; it does not revert hand edits. `generate_index.py --check` compares the rendered UTF-8 bytes, so line-ending differences also fail.
 
-`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` over one explicit cohort of `no-magic`, `no-magic-papers` and `no-magic-viz` commits, and invariant 5 with `scripts/generate_index.py --check`. The validator reads cards through the single frontmatter parser in `generate_index.py`. Each `implementations[]` entry's `path` must be `{tier}/{script_slug}.py`, match the catalog entry and resolve to a committed regular file in `no-magic`; unsafe or wrong-repo paths, duplicate ownership, lesson status/path/file mismatches and orphan lessons fail. Each entry also declares its media: a linked scene and GIF preview that must be committed in `no-magic-viz` as valid Python and a GIF with nonzero dimensions, or an explicit omission allowed only for catalog `comparison` scripts. These media checks confirm presence and format, not rendering. Every input must equal the committed blob at the selected commit, and a passing run records those digests in a receipt. PRs and non-`main` pushes validate the exact head as a candidate cohort, which makes no publication claim; pushes to `main` validate the published cohort, whose commits must be ancestors of each public `main`, so invariant 2's "on `main`" is checked only in published runs. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
+`no-magic-papers` CI checks invariants 1–3 with `scripts/validate_invariants.py` over one explicit cohort of `no-magic`, `no-magic-papers` and `no-magic-viz` commits, and invariant 5 with `scripts/generate_index.py --check`. The validator reads cards through the single frontmatter parser in `generate_index.py`. Each `implementations[]` entry's `path` must be `{tier}/{script_slug}.py`, match the catalog entry and resolve to a committed regular file in `no-magic`; unsafe or wrong-repo paths, duplicate ownership, lesson status/path/file mismatches and orphan lessons fail. Each entry also declares its media: a linked scene and GIF preview that must be committed in `no-magic-viz` as valid Python and a GIF with nonzero dimensions, or an explicit omission allowed only for catalog `comparison` scripts. These media checks confirm presence and format, not rendering. Every input must equal the committed blob at the selected commit, and a passing run records those digests in a receipt. PRs and non-`main` pushes validate the exact head as a candidate cohort, which makes no publication claim; pushes to `main` validate the published cohort, whose commits must be ancestors of each public `main`, so publication ancestry is checked only in published runs. The paper-side half of invariant 4 is enforced by `generate_index.py`; the script-side half is a review rule.
 
 ---
 
@@ -363,9 +363,9 @@ Papers and their implementations are not static.
 
 ```
   triaged ──► summarized ──► backlog-implement ──► implemented
-                  │                  │                   │
-                  ▼                  ▼                   ▼
-            reference-only      deferred            deprecated
+                  │                                      │
+                  ▼                                      ▼
+            reference-only                          deprecated
                                                         │
                                                         ▼
                                                      replaced
@@ -375,8 +375,12 @@ Papers and their implementations are not static.
 ```
 
 - **deprecated:** the paper is still accurate but the implementation no longer reflects best practice or has been superseded. The script gets a `DEPRECATED.md` banner; paper card is updated.
-- **replaced:** a newer paper supersedes this one. The card links forward to the replacement card; the implementation may be retired or kept as a historical reference.
-- **archived:** content moved out of the active catalog but preserved in git history and paper card (`status: archived` with rationale).
+- **replaced:** a newer paper supersedes this one. The card links forward to the replacement card; the implementation may be retired or kept as a historical reference in the card narrative and Git history (see below).
+- **archived:** content moved out of the active catalog but preserved in git history and paper card (`status: archived` with rationale in the card narrative, not in `implementations[]`).
+
+Deferral is not a status: a deferred card stays `backlog-implement`, with the deferral recorded as a routing or scheduling note such as `routing.review_date`.
+
+`implementations[]` lists only artifacts that exist in the selected cohort; its `commit` and `release` labels annotate those current files and are not a lookup into history. Because §7.3 invariant 2 requires every listed entry to resolve to the selected catalog and a committed `no-magic` file whatever the card's `status`, an entry is removed from `implementations[]` in the same change that removes its script from the active catalog. The paper, the rationale and any genuine historical reference stay in the card narrative and in Git history rather than as live metadata. Because invariant 1 requires a script that is still in the catalog to have exactly one owning card with `status: implemented`, moving a card away from `implemented` passes CI only when the same human-reviewed change also removes the script from the catalog or moves its ownership, with matching card metadata. There is no archival exemption, and these checks neither decide nor authorize any retirement; lifecycle decisions remain the maintainer's.
 
 ### 8.2 Lifecycle review cadence
 

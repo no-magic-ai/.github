@@ -70,14 +70,14 @@ Binding on every contributor and every agent that operates on these repos.
 
 - **One file per algorithm.** No local imports, no `utils.py`, no companion files.
 - **Zero external dependencies.** Python standard library only.
-- **`python script.py` runs everything.** For most scripts that is train + inference in one command; the exceptions (side-by-side training comparisons, forward-pass mechanism demonstrations and non-learning algorithm demonstrations) are recorded per script in [`docs/catalog.json`](https://github.com/no-magic-ai/no-magic/blob/main/docs/catalog.json).
+- **`python script.py` runs everything.** Most scripts train in one command, either one model followed by inference or alternative variants compared side by side; a few run untrained forward-pass mechanisms or non-learning algorithms. Each script's kind is recorded in [`docs/catalog.json`](https://github.com/no-magic-ai/no-magic/blob/main/docs/catalog.json).
 - **Comments are the curriculum.** 30–40% comment density, math-to-code mappings, intuition over jargon.
 
 ---
 
 ## Contributing
 
-Every script is written for the person reading it for the first time. Contributions that change algorithms, paper cards, lessons, curriculum explanations or exercise answers require the maintainer's content approval. For the current enhancement phase only, purely technical PRs (tooling, CI, generated metadata, source-state corrections) may be merged by a gated runner after independent review, verification and all required checks, as recorded in [no-magic issue #39](https://github.com/no-magic-ai/no-magic/issues/39); this does not replace scientific review. See [CONTRIBUTING.md](https://github.com/no-magic-ai/no-magic/blob/main/CONTRIBUTING.md) in each repo for the review checklist.
+Every script is written for the person reading it for the first time. Algorithm or math behavior changes, newly interpreted research claims, paper cards, lessons, curriculum explanations and exercise answers need actual human maintainer approval of the current PR head; mixed, ambiguous or disputed classifications are human-gated too, and an AI review or agent-posted approval is not human approval. For the current enhancement phase only, purely technical PRs (tooling, CI, generated metadata, source-state corrections) may be merged by a gated runner after independent review, verification and all required checks, and only when both the runner and the independent reviewer classify the current diff as technical, as recorded in [no-magic issue #39](https://github.com/no-magic-ai/no-magic/issues/39); this does not replace scientific review. See [CONTRIBUTING.md](https://github.com/no-magic-ai/no-magic/blob/main/CONTRIBUTING.md) in each repo for the review checklist.
 
 ## Governance
 

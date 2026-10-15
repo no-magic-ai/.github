@@ -172,6 +172,7 @@ Every paper card tags one primary theme and zero to two secondary themes from th
 | `safety-robustness` | Jailbreak, watermarking, red-teaming, bias, adversarial robustness. |
 | `agents` | Planning, tool use, memory-augmented agents, multi-agent coordination, computer use. |
 | `multimodal` | Vision-language, audio, video, cross-modal fusion. |
+| `evaluation` | How models are measured: eval statistics, error bars, paired comparisons, power and benchmark methodology. |
 
 Additional free-form `tags:` are permitted in the paper card frontmatter for finer-grained categorization (e.g. `grpo`, `rope-extension`, `green-list`). Tags do not need to be pre-registered.
 
@@ -588,6 +589,7 @@ Fully autonomous paper-to-implementation is off-charter. The maintainer review g
 12. **One paper card per paper, list-valued `implementations:`.** When a paper introduces multiple distinct algorithms, the card declares multiple entries in `implementations[]`. Bibliographic metadata is the unit of citation; algorithms are the units of implementation.
 13. **`INDEX.md` is generated.** Built by `scripts/generate_index.py` from card frontmatter, grouped by primary theme. Regenerate it with that script; CI runs `generate_index.py --check` and fails on drift (§7.3 invariant 5). `data/papers.json`, the JSON projection of the same frontmatter, is generated, committed and checked the same way (`--format json --write`, `--format json --check`). The check compares the rendered UTF-8 bytes, so line-ending differences also fail, and CI does not revert hand edits.
 14. **Release sequence:** `no-magic` v2.1 (gap-fill batch, additive) → `no-magic-papers` v0.1 (5 seed cards + 2 lessons) → `no-magic` v3.0 (mandatory `paper_slug` in `catalog.json`, full backfill, §7.3 invariant 3 becomes enforced).
+15. **Theme amendment (2026-10-15).** `evaluation` is added as the thirteenth theme in §3.5 ("How models are measured: eval statistics, error bars, paired comparisons, power and benchmark methodology."), appended last so existing ordering is unchanged.
 
 ---
 
